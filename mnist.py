@@ -24,6 +24,7 @@ input_units = num_pixels * pixel_bits
 htm_units = 2048
 batch_size = 32
 
+
 class HTMModel:
     def __init__(self):
         pooler = SpatialPooler(htm_units, lr=1e-2)
@@ -37,6 +38,7 @@ class HTMModel:
         classifier_out = Dense(num_classes, activation='softmax')(classifier_in)
         self.classifier = Model(classifier_in, classifier_out)
         self.classifier.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
+
 
 def main():
     # Build a model
@@ -65,14 +67,14 @@ def main():
 
     input_set = np.array(all_data[:num_data])
     input_labels = all_labels[:num_data]
-    val_set = all_data[num_data:num_data+num_validate]
-    val_labels = all_labels[num_data:num_data+num_validate]
+    val_set = all_data[num_data:num_data + num_validate]
+    val_labels = all_labels[num_data:num_data + num_validate]
 
     def validate(sess):
         print('Validating...')
 
         # Feed into HTM layer
-        all_outputs = sess.run(model.y, feed_dict={ model.x: val_set })
+        all_outputs = sess.run(model.y, feed_dict={model.x: val_set})
 
         # Feed into classifier layer
         loss, accuracy = model.classifier.evaluate(np.array(all_outputs), np.array(val_labels))
@@ -87,14 +89,14 @@ def main():
 
         for i in tqdm(range(0, len(order) + 1 - batch_size, batch_size)):
             # Mini-batch training
-            batch_indices = order[i:i+batch_size]
+            batch_indices = order[i:i + batch_size]
             x = [input_set[ii] for ii in batch_indices]
-            sess.run(model.train_ops, feed_dict={ model.x: x })
+            sess.run(model.train_ops, feed_dict={model.x: x})
 
     def train_classifier(sess):
         print('Training classifier...')
         # Train classifier
-        all_outputs = sess.run(model.y, feed_dict={ model.x: input_set })
+        all_outputs = sess.run(model.y, feed_dict={model.x: input_set})
         model.classifier.fit(np.array(all_outputs), np.array(input_labels), epochs=10)
 
     with tf.Session() as sess:
@@ -106,6 +108,7 @@ def main():
             train_htm(sess)
             train_classifier(sess)
             validate(sess)
+
 
 if __name__ == '__main__':
     main()

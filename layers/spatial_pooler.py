@@ -1,7 +1,64 @@
 import tensorflow as tf
 import numpy as np
 
-from .layer import Layer
+from layers.layer import Layer
+
+if False:
+    from typing import Union
+
+class SparseBiadjacencyTensor( object ):
+    def __init__(self, shape=None, indices=None, values=None):
+        self.indices = indices
+        self.values = values
+        self.shape = shape
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return "SparseBiadjacencyTensor:\n" \
+                    "\tShape:\n\t\t{}\n".format(self.shape.eval()) +\
+                    "\tIndices:\n\t\t{}\n".format(self.indices.eval()) +\
+                    "\tValues:\n\t\t{}\n".format(self.values.eval())
+
+def pad_up_to(tensor, max_in_dims, constant_values):
+    """ Pads a tensor up to a specific shape.
+
+    >>> t = tf.constant([[1, 2], [3, 4]])
+    >>> padded_t = pad_up_to(t, [2, 4], -1)
+    >>> with tf.Session() as sess: print(padded_t.eval())
+    [[ 1  2 -1 -1]
+     [ 3  4 -1 -1]]
+
+    From: https://stackoverflow.com/a/48535322/782170
+    """
+    s = tf.shape(tensor)
+    paddings = [[0, m-s[i]] for (i,m) in enumerate(max_in_dims)]
+    return tf.pad(tensor, paddings, 'CONSTANT', constant_values=constant_values)
+
+def initialize_permanence(input_shape,  # type: Union[tf.Tensor, np.ndarray]
+                          output_shape,  # type: Union[tf.Tensor, np.ndarray]
+                          sparsity=0.02
+                          ):
+    """Creates a modifiable sparse tensor for connections. Assumes it will keep about the same sparsity
+    >>> input_shape = np.asarray([100,100])
+    >>> output_shape = np.asarray([50,50])
+    >>> perm = initialize_permanence(input_shape, output_shape)
+    >>> with tf.Session() as sess: print(perm)
+
+
+    """
+
+    biadjancy_dimension = tf.concat([input_shape,output_shape],0)
+    num_full_edges = tf.math.reduce_prod(biadjancy_dimension)
+    sparsity_constant = tf.constant(sparsity)
+    num_sparse_edges = tf.cast(tf.cast(num_full_edges, tf.float32)*sparsity_constant, tf.int32)
+    biadjancy_indices = tf.ones((num_sparse_edges,biadjancy_dimension.shape[0]))*-1
+    biadjancy_values = tf.zeros(num_sparse_edges)
+
+    return SparseBiadjacencyTensor(biadjancy_dimension, biadjancy_indices, biadjancy_values)
+
+
 
 class SpatialPooler(Layer):
     """
