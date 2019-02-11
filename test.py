@@ -17,7 +17,7 @@ class SPTest(unittest.TestCase):
             sess.run(tf.global_variables_initializer())
 
             # Override permenance with a custom value
-            sess.run(tf.assign(layer.p, [
+            sess.run(tf.assign(layer.permanence, [
                 [1, 0, 1, 1],
                 [0, 1, 0, 0],
                 [1, 1, 1, 0],
@@ -32,7 +32,7 @@ class SPTest(unittest.TestCase):
         """
         Test forward computation
         """
-        layer = SpatialPooler(4, lr=0.1, pool_density=1, boost_strength=0)
+        layer = SpatialPooler(4, learning_rate=0.1, pool_density=1, boost_strength=0)
         x = tf.placeholder(tf.float32, [None, 4], name='Input')
         layer.build([1, 4])
         train = layer.train(x, tf.constant([[0., 1, 0, 1]]))
@@ -41,7 +41,7 @@ class SPTest(unittest.TestCase):
             sess.run(tf.global_variables_initializer())
 
             # Override permenance with a custom value
-            sess.run(tf.assign(layer.p, [
+            sess.run(tf.assign(layer.permanence, [
                 [0.6, 0, 0.6, 0.6],
                 [0, 0.6, 0, 0],
                 [0.6, 0.6, 0.6, 0],

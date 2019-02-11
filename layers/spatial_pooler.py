@@ -1,70 +1,16 @@
 import tensorflow as tf
 import numpy as np
 
+from htmtensorflow.util.sparse_biadjacency import init_random
 from layers.layer import Layer
-
-if False:
-    from typing import Union
-
-class SparseBiadjacencyTensor( object ):
-    def __init__(self, shape=None, indices=None, values=None):
-        self.indices = indices
-        self.values = values
-        self.shape = shape
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return "SparseBiadjacencyTensor:\n" \
-                    "\tShape:\n\t\t{}\n".format(self.shape.eval()) +\
-                    "\tIndices:\n\t\t{}\n".format(self.indices.eval()) +\
-                    "\tValues:\n\t\t{}\n".format(self.values.eval())
-
-def pad_up_to(tensor, max_in_dims, constant_values):
-    """ Pads a tensor up to a specific shape.
-
-    >>> t = tf.constant([[1, 2], [3, 4]])
-    >>> padded_t = pad_up_to(t, [2, 4], -1)
-    >>> with tf.Session() as sess: print(padded_t.eval())
-    [[ 1  2 -1 -1]
-     [ 3  4 -1 -1]]
-
-    From: https://stackoverflow.com/a/48535322/782170
-    """
-    s = tf.shape(tensor)
-    paddings = [[0, m-s[i]] for (i,m) in enumerate(max_in_dims)]
-    return tf.pad(tensor, paddings, 'CONSTANT', constant_values=constant_values)
-
-def initialize_permanence(input_shape,  # type: Union[tf.Tensor, np.ndarray]
-                          output_shape,  # type: Union[tf.Tensor, np.ndarray]
-                          sparsity=0.02
-                          ):
-    """Creates a modifiable sparse tensor for connections. Assumes it will keep about the same sparsity
-    >>> input_shape = np.asarray([100,100])
-    >>> output_shape = np.asarray([50,50])
-    >>> perm = initialize_permanence(input_shape, output_shape)
-    >>> with tf.Session() as sess: print(perm)
-
-
-    """
-
-    biadjancy_dimension = tf.concat([input_shape,output_shape],0)
-    num_full_edges = tf.math.reduce_prod(biadjancy_dimension)
-    sparsity_constant = tf.constant(sparsity)
-    num_sparse_edges = tf.cast(tf.cast(num_full_edges, tf.float32)*sparsity_constant, tf.int32)
-    biadjancy_indices = tf.ones((num_sparse_edges,biadjancy_dimension.shape[0]))*-1
-    biadjancy_values = tf.zeros(num_sparse_edges)
-
-    return SparseBiadjacencyTensor(biadjancy_dimension, biadjancy_indices, biadjancy_values)
-
 
 
 class SpatialPooler(Layer):
     """
     Represents the spatial pooling computation layer
     """
-    def __init__(self, output_dim, sparsity=0.02, lr=1e-2, pool_density=0.9,
+
+    def __init__(self, output_dim, sparsity=0.02, learning_rate=1e-2, pool_density=0.9,
                  duty_cycle=1000, boost_strength=100, **kwargs):
         """
         Args:
@@ -75,7 +21,7 @@ class SpatialPooler(Layer):
         """
         self.output_dim = output_dim
         self.sparsity = sparsity
-        self.lr = lr
+        self.learning_rate = learning_rate
         self.pool_density = pool_density
         self.duty_cycle = duty_cycle
         self.boost_strength = boost_strength
@@ -83,17 +29,15 @@ class SpatialPooler(Layer):
         super().__init__(**kwargs)
 
     def build(self, input_shape):
-        # Permanence of connections between neurons
-        self.p = tf.Variable(tf.random_uniform((input_shape[1], self.output_dim), 0, 1), name='Permanence')
+        self.permanence = init_random(input_shape, self.output_dim)
 
         # Potential pool matrix
         # Masks out the connections randomly
-        rand_mask = np.random.binomial(1, self.pool_density, input_shape[1] * self.output_dim)
-        pool_mask = tf.constant(np.reshape(rand_mask, [input_shape[1], self.output_dim]), dtype=tf.float32)
 
         # Connection matrix, dependent on the permenance values
         # If permenance > 0.5, we are connected.
-        self.connection = tf.round(self.p) * pool_mask
+        connection_index_locations = tf.where(tf.greater_equal(self.permanence.values, 0.5))
+        self.connection_incices = tf.gather_nd(self.permanence.indices, connection_index_locations)
 
         # Time-averaged activation level for each mini-column
         self.avg_activation = tf.Variable(tf.zeros([1, self.output_dim]))
@@ -152,10 +96,10 @@ class SpatialPooler(Layer):
         delta = tf.einsum('ij,ik,jk->jk', x_shifted, y, self.connection) / batch_size
 
         # Apply learning rate multiplier
-        new_p = tf.clip_by_value(self.p + self.lr * delta, 0, 1)
+        new_p = tf.clip_by_value(self.permanence + self.learning_rate * delta, 0, 1)
 
         # Create train op
-        train_op = tf.assign(self.p, new_p)
+        train_op = tf.assign(self.permanence, new_p)
 
         # Update the average activation levels
         avg_activation = tf.reduce_mean(y, axis=0, keep_dims=True)

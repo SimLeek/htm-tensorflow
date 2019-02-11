@@ -27,7 +27,7 @@ batch_size = 32
 
 class HTMModel:
     def __init__(self):
-        pooler = SpatialPooler(htm_units, lr=1e-2)
+        pooler = SpatialPooler(htm_units, learning_rate=1e-2)
         # Model input
         self.x = tf.placeholder(tf.float32, [None, input_units])
         self.y = pooler(self.x)
