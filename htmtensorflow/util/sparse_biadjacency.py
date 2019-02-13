@@ -48,12 +48,13 @@ def init_random(input_shape,  # type: Union[tf.Tensor, np.ndarray]
     [[ 0  0  0 21]
      [ 0  0  0 23]
      [ 0  0  0 26]
-     ...
+     ...,
      [99 99 45 23]
      [99 99 46 43]
      [99 99 47 15]]
         Values:
-    [0.2390374  0.92039955 0.05051243 ... 0.69530106 0.02886164 0.9086925 ]
+    [ 0.23903739  0.92039955  0.05051243 ...,  0.69530106  0.02886164
+      0.90869248]
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
     two = tf.constant(2, dtype=tf.float32)
