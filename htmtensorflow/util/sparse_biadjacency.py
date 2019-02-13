@@ -81,7 +81,7 @@ def init_zero(input_shape,  # type: Union[tf.Tensor, np.ndarray]
               output_shape,  # type: Union[tf.Tensor, np.ndarray]
               sparsity=0.02,
               ):
-    """Creates a modifiable sparse tensor for connections. Assumes it will keep about the same max sparsity
+    r"""Creates a modifiable sparse tensor for connections. Assumes it will keep about the same max sparsity
     >>> input_shape = np.asarray([100,100])
     >>> output_shape = np.asarray([50,50])
     >>> with tf.Session() as sess:

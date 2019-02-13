@@ -8,4 +8,4 @@ install:
   - pip install -r requirements.txt
 
 script:
-  find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m doctest -v
+  find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m doctest -o NORMALIZE_WHITESPACE -v
