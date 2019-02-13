@@ -31,7 +31,7 @@ def array_to_nd_index(indices,
     for i in range(nd_shape.shape[0]):
         frac_x = indices / tf.cast(tf.math.reduce_prod(nd_shape[i + 1:]), tf.int32)
         frac_x = tf.cast(frac_x, tf.int32)
-        mod_x = tf.math.reduce_prod(nd_shape[i:i + 1])
+        mod_x = tf.cast(tf.math.reduce_prod(nd_shape[i:i + 1]), tf.int32)
         x = frac_x % mod_x
         x = tf.reshape(x, [-1, 1])
         xy = tf.concat([xy, x], axis=-1)
