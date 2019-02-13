@@ -11,7 +11,7 @@ def unique_random_uniform(samples_shape, maxval=1, dtype=tf.float32, seed=None):
     >>> with tf.Session() as sess:
     ...     u_eval = u.eval()
     >>> print(u_eval)
-    [      21       39       51 ..., 24999773 24999789 24999833]
+    [      21       39       51 ... 24999773 24999789 24999833]
     >>> len(u_eval)
     500000
     """
