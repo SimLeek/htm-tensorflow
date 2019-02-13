@@ -1,4 +1,8 @@
 # Hierarchical Temporal Memory in Tensorflow
+![Build status](https://travis-ci.com/SimLeek/htm-tensorflow.svg?branch=master)
+[![codecov](https://codecov.io/gh/SimLeek/htm-tensorflow/branch/master/graph/badge.svg)](https://codecov.io/gh/SimLeek/htm-tensorflow)
+[![Maintainability](https://api.codeclimate.com/v1/badges/6eee1d193a19bcc36701/maintainability)](https://codeclimate.com/github/SimLeek/htm-tensorflow/maintainability)
+
 An implementation of Numenta's HTM algorithm in Tensorflow with GPU support.
 API design based on Keras API.
 
