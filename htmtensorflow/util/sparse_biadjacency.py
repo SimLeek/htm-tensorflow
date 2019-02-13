@@ -95,12 +95,12 @@ def init_zero(input_shape,  # type: Union[tf.Tensor, np.ndarray]
     [[-1 -1 -1 -1]
      [-1 -1 -1 -1]
      [-1 -1 -1 -1]
-     ...
+     ...,
      [-1 -1 -1 -1]
      [-1 -1 -1 -1]
      [-1 -1 -1 -1]]
         Values:
-    [0. 0. 0. ... 0. 0. 0.]
+    [ 0.  0.  0. ...,  0.  0.  0.]
     """
 
     biadjancy_dimension = tf.concat([input_shape, output_shape], 0)
