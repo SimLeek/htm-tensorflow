@@ -1,0 +1,14 @@
+language: python
+
+env:
+  - CODECOV_TOKEN="2cfcf295-ea5e-4f86-a596-fea8a850f11f"
+
+python:
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install -r requirements.txt
+
+script:
+  find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m doctest -o NORMALIZE_WHITESPACE -v

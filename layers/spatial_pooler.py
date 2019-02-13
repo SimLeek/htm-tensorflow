@@ -1,13 +1,16 @@
 import tensorflow as tf
 import numpy as np
 
-from .layer import Layer
+from htmtensorflow.util.sparse_biadjacency import init_random
+from layers.layer import Layer
+
 
 class SpatialPooler(Layer):
     """
     Represents the spatial pooling computation layer
     """
-    def __init__(self, output_dim, sparsity=0.02, lr=1e-2, pool_density=0.9,
+
+    def __init__(self, output_dim, sparsity=0.02, learning_rate=1e-2, pool_density=0.9,
                  duty_cycle=1000, boost_strength=100, **kwargs):
         """
         Args:
@@ -18,7 +21,7 @@ class SpatialPooler(Layer):
         """
         self.output_dim = output_dim
         self.sparsity = sparsity
-        self.lr = lr
+        self.learning_rate = learning_rate
         self.pool_density = pool_density
         self.duty_cycle = duty_cycle
         self.boost_strength = boost_strength
@@ -26,17 +29,15 @@ class SpatialPooler(Layer):
         super().__init__(**kwargs)
 
     def build(self, input_shape):
-        # Permanence of connections between neurons
-        self.p = tf.Variable(tf.random_uniform((input_shape[1], self.output_dim), 0, 1), name='Permanence')
+        self.permanence = init_random(input_shape, self.output_dim)
 
         # Potential pool matrix
         # Masks out the connections randomly
-        rand_mask = np.random.binomial(1, self.pool_density, input_shape[1] * self.output_dim)
-        pool_mask = tf.constant(np.reshape(rand_mask, [input_shape[1], self.output_dim]), dtype=tf.float32)
 
         # Connection matrix, dependent on the permenance values
         # If permenance > 0.5, we are connected.
-        self.connection = tf.round(self.p) * pool_mask
+        connection_index_locations = tf.where(tf.greater_equal(self.permanence.values, 0.5))
+        self.connection_incices = tf.gather_nd(self.permanence.indices, connection_index_locations)
 
         # Time-averaged activation level for each mini-column
         self.avg_activation = tf.Variable(tf.zeros([1, self.output_dim]))
@@ -95,10 +96,10 @@ class SpatialPooler(Layer):
         delta = tf.einsum('ij,ik,jk->jk', x_shifted, y, self.connection) / batch_size
 
         # Apply learning rate multiplier
-        new_p = tf.clip_by_value(self.p + self.lr * delta, 0, 1)
+        new_p = tf.clip_by_value(self.permanence + self.learning_rate * delta, 0, 1)
 
         # Create train op
-        train_op = tf.assign(self.p, new_p)
+        train_op = tf.assign(self.permanence, new_p)
 
         # Update the average activation levels
         avg_activation = tf.reduce_mean(y, axis=0, keep_dims=True)

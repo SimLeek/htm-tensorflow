@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-class Layer:
+class Layer( object ):
     """
     Represents a layer of computation
     """

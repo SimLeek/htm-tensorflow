@@ -1,3 +1,4 @@
-tensorflow-gpu
+numpy==1.16.1
+tensorflow
 keras
 tqdm
