@@ -46,8 +46,8 @@ def init_random(input_shape,  # type: Union[tf.Tensor, np.ndarray]
            ...,
            [639, 472,  10,  32],
            [639, 473,  24,  34],
-           [639, 476,  26,  24]], dtype=int64), values=array([0.2390374 , 0.92039955, 0.05051243, ..., 0.7923846 , 0.03713989,
-           0.6871357 ], dtype=float32), dense_shape=array([640, 480,  50,  50], dtype=int64))
+           [639, 476,  26,  24]]), values=array([0.2390374 , 0.92039955, 0.05051243, ..., 0.7923846 , 0.03713989,
+           0.6871357 ], dtype=float32), dense_shape=array([640, 480,  50,  50]))
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
     two = tf.constant(2, dtype=tf.float32)
@@ -88,7 +88,7 @@ def init_zero(input_shape,  # type: Union[tf.Tensor, np.ndarray]
            ...,
            [-1, -1, -1, -1],
            [-1, -1, -1, -1],
-           [-1, -1, -1, -1]], dtype=int64), values=array([0., 0., 0., ..., 0., 0., 0.], dtype=float32), dense_shape=array([100, 100,  50,  50], dtype=int64))
+           [-1, -1, -1, -1]]), values=array([0., 0., 0., ..., 0., 0., 0.], dtype=float32), dense_shape=array([100, 100,  50,  50]))
     """
 
     biadjancy_dimension = tf.concat([input_shape, output_shape], 0)
