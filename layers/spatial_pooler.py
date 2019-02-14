@@ -2,53 +2,96 @@ import tensorflow as tf
 import numpy as np
 
 from htmtensorflow.util.sparse_biadjacency import init_random
-from layers.layer import Layer
+from htmtensorflow.util.get_connected_synapses import get_connected_synapses
+
+if False:
+    from typing import Union, List, Tuple
+
+    shape_type = Union[tf.TensorShape, np.ndarray, List[int], Tuple[int]]
+    var_type = Union[int, float, tf.Variable, tf.Tensor]
+    sparsity_type = Union[var_type, Tuple[var_type, shape_type], List[var_type, shape_type]]
 
 
-class SpatialPooler(Layer):
-    """
-    Represents the spatial pooling computation layer
-    """
+class SpatialPooler(object):
 
-    def __init__(self, output_dim, sparsity=0.02, learning_rate=1e-2, pool_density=0.9,
-                 duty_cycle=1000, boost_strength=100, **kwargs):
+    def __init__(self,
+                 input_shape,  # type: shape_type
+                 output_shape,  # type: shape_type
+                 connective_sparsity=0.05,  # type: sparsity_type
+                 activation_sparsity=0.02,  # type: sparsity_type
+                 **kwargs):
+        """ Creates a sparse spatial pooling layer.
+
+        >>> sp = SpatialPooler((640,480), (100,100))
+        >>> sp.build()
+
+        :param input_shape: The shape of the input in a list, tuple, numpy array, or tensor
+        :param output_shape: The shape of the output in a list, tuple, numpy array, or tensor
+        :param connective_sparsity:
+            If less than 1, this specifies the percent of connections of a dense layer.
+            Todo: Not implemented:
+            If greater or equal to 1, this specifies the max neurons any neuron can connect to.
+            If this is a tuple, the second parameter should be a tensor with a shape of the connectable area around any
+                neuron, with values between 0 and 1 deciding the probability of connection.
+        :param activation_sparsity:
+            If less than 1, this specifies the percent of output neurons that should be active with any input.
+            Todo: Not implemented:
+            If greater or equal to 1, this specifies the number of output neurons that should be active with any input.
+            If this is a tuple, the second parameter should be a tensor with a shape of the activation area around any
+                neuron, with values between 0 and 1 deciding the inclusion of other neurons in the center's area.
+        :param learning_rate: initial percentage increase of connectedness between any two activated neurons.
+            Todo: Not implemented:
+            Unit can be set to per program iteration or per time interval.
+            Can be set on the fly.
+        :param duty_cycle: initial time window for the running average of activations.
+            Todo: Not implemented.
+            Unit can be set to per program iteration or per time interval.
+            Can be set on the fly.
+        :param boost_strength: initial value to boost the least active neurons in the duty_cycle with.
+            Todo: Not implemented.
+            Unit can be set to per program iteration or per time interval.
+            Can be set on the fly.
         """
-        Args:
-            - output_dim: Size of the output dimension
-            - sparsity: The target sparsity to achieve
-            - lr: The learning rate in which permenance is updated
-            - pool_density: Percent of input a cell is connected to on average.
-        """
-        self.output_dim = output_dim
-        self.sparsity = sparsity
-        self.learning_rate = learning_rate
-        self.pool_density = pool_density
-        self.duty_cycle = duty_cycle
-        self.boost_strength = boost_strength
-        self.top_k = int(np.ceil(self.sparsity * np.prod(self.output_dim)))
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.connective_sparsity = connective_sparsity
+        self.activation_sparsity = activation_sparsity
+
+        if 'learning_rate' in kwargs.keys():
+            self.learning_rate = kwargs['learning_rate']
+        else:
+            self.learning_rate = 1e-2
+
+        if 'duty_cycle' in kwargs.keys():
+            self.duty_cycle = kwargs['duty_cycle']
+        else:
+            self.duty_cycle = 1000
+
+        if 'boost_strength' in kwargs.keys():
+            self.boost_strength = kwargs['boost_strength']
+        else:
+            self.boost_strength = 100
+
+        self.top_k = int(np.ceil(self.activation_sparsity * np.prod(self.output_shape)))
+        self.is_built = False
+        self.train_ops = []
+
         super().__init__(**kwargs)
 
-    def build(self, input_shape):
-        self.permanence = init_random(input_shape, self.output_dim)
-
-        # Potential pool matrix
-        # Masks out the connections randomly
-
-        # Connection matrix, dependent on the permenance values
-        # If permenance > 0.5, we are connected.
-        connection_index_locations = tf.where(tf.greater_equal(self.permanence.values, 0.5))
-        self.connection_incices = tf.gather_nd(self.permanence.indices, connection_index_locations)
-
-        # Time-averaged activation level for each mini-column
-        self.avg_activation = tf.Variable(tf.zeros([1, self.output_dim]))
-
-        super().build(input_shape)
+    def build(self):
+        self.permanence = init_random(self.input_shape, self.output_shape, self.connective_sparsity)
+        self.get_connection_indices = lambda: get_connected_synapses(self.permanence, 0.5)
+        self.avg_activation = tf.Variable(tf.zeros(self.output_shape))
+        self.is_built = True
 
     def call(self, x):
+        if not self.is_built:
+            self.build()
+
         # Boosting calculations
         # The recent activity in the mini-column's (global) neighborhood
-        neighbor_mask = tf.constant(-np.identity(self.output_dim) + 1, dtype=tf.float32)
-        neighbor_activity = tf.matmul(self.avg_activation, neighbor_mask) / (self.output_dim - 1)
+        neighbor_mask = tf.constant(-np.identity(self.output_shape) + 1, dtype=tf.float32)
+        neighbor_activity = tf.matmul(self.avg_activation, neighbor_mask) / (self.output_shape - 1)
         boost_factor = tf.exp(-self.boost_strength * (self.avg_activation - neighbor_activity))
 
         # TODO: Only global inhibition is implemented.
@@ -106,4 +149,6 @@ class SpatialPooler(Layer):
         new_act_avg = ((self.duty_cycle - 1) * self.avg_activation + avg_activation) / self.duty_cycle
         update_act_op = tf.assign(self.avg_activation, new_act_avg)
 
-        return [train_op, update_act_op]
+        y = self.call(x)
+        self.train_ops.append([train_op, update_act_op])
+        return y
