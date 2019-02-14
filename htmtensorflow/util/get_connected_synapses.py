@@ -32,7 +32,7 @@ def get_connected_synapses(sparse_tensor,  # type: tf.SparseTensor
            ...,
            [99, 99, 44, 25],
            [99, 99, 45, 23],
-           [99, 99, 47, 15]], dtype=int64), values=array([1, 1, 1, ..., 1, 1, 1], dtype=int64), dense_shape=array([100, 100,  50,  50], dtype=int64))
+           [99, 99, 47, 15]]), values=array([1, 1, 1, ..., 1, 1, 1]), dense_shape=array([100, 100,  50,  50]))
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
 
