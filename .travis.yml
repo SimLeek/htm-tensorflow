@@ -9,6 +9,12 @@ python:
 
 install:
   - pip install -r requirements.txt
+  - pip install coverage
+  - pip install codecov
 
 script:
-  find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m doctest -o NORMALIZE_WHITESPACE -v
+  - find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE -v
+  - python -m coverage report
+
+after_success:
+  - codecov
