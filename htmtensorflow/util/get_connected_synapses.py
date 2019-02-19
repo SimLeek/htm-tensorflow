@@ -14,12 +14,12 @@ def get_connected_synapses(sparse_tensor,  # type: tor.sparse.Tensor
     >>> perm = init_random(input_shape, output_shape, 0.0002)
     >>> perm = get_connected_synapses(perm)
     >>> print(perm)
-    tensor(indices=tensor([[ 0,  0,  0,  ..., 99, 99, 99],
-                           [ 0,  2,  2,  ..., 93, 94, 95],
-                           [43, 13, 25,  ...,  6, 19, 44],
-                           [ 9, 46, 27,  ...,  2, 24, 42]]),
-           values=tensor([0.6512, 0.7468, 0.9477,  ..., 0.6100, 0.8252, 0.7225]),
-           size=(100, 100, 50, 50), nnz=5047, layout=torch.sparse_coo)
+    tensor(indices=tensor([[ 0,  0,  0,  ..., 97, 98, 98],
+                           [ 1,  2,  3,  ..., 93, 14, 62],
+                           [ 6,  9, 29,  ...,  7, 22,  6],
+                           [43, 30, 23,  ..., 20, 20, 30]]),
+           values=tensor([0.5076, 0.5787, 0.7881,  ..., 0.6039, 0.8797, 0.5311]),
+           size=(100, 100, 50, 50), nnz=5014, layout=torch.sparse_coo)
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
     sub_indices = tor.ge(sparse_tensor._values(), connected_val).nonzero()
