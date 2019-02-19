@@ -8,9 +8,9 @@ python:
   - "3.6"
 
 install:
-  - pip install -r requirements.txt
-  - pip install coverage
-  - pip install codecov
+  - pip install -r requirements.txt --progress-bar off
+  - pip install coverage --progress-bar off
+  - pip install codecov --progress-bar off
 
 script:
   - find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE -v
