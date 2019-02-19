@@ -1,36 +1,33 @@
-import tensorflow as tf
-
+import torch as tor
 from htmtensorflow.util.pad_up_to import pad_up_to
+from torch.autograd import Variable
+from torch.distributions import uniform
+import numpy as np
 
-
-def unique_random_uniform(samples_shape, maxval=1, dtype=tf.float32, seed=None):
+def unique_random_uniform(samples_shape,
+                          minval=0,
+                          maxval=1,
+                          dtype=tor.FloatTensor):
     """
     Generates only unique random variables. May be smaller than num_samples
 
-    >>> u = unique_random_uniform((500000,), maxval=25000000, dtype=tf.int32, seed=1)
-    >>> with tf.Session() as sess:
-    ...     u_eval = u.eval()
-    >>> print(u_eval)
-    [      21       39       51 ... 24999773 24999789 24999833]
-    >>> len(u_eval)
+    >>> s = tor.manual_seed(1)
+    >>> u = unique_random_uniform((500000,), maxval=25000000, dtype=tor.LongTensor)
+    >>> print(u)
+    tensor([       5,       25,       32,  ..., 24999652, 24999784, 24999804])
+    >>> len(u)
     500000
     """
-    start_inds = tf.ones(samples_shape, dtype=dtype) * -1
-    start_reps = tf.constant((0,))
+    inds = Variable(tor.ones(samples_shape).type(dtype) * -1)
+    reps = Variable(tor.LongTensor((0,)))
 
-    cond = lambda inds, reps: inds[-1] < 0
-
-    def update_inds(inds, reps):
-        inds = tf.concat([inds[:reps[-1]],
-                          tf.random.uniform((samples_shape[-1] - reps[-1],), maxval=maxval, dtype=dtype, seed=seed)],
-                         -1)
-        inds, reps = tf.unique(inds)
-        inds = tf.contrib.framework.sort(inds, -1)
+    while inds[-1] < 0:
+        uni = uniform.Uniform(minval,maxval)
+        reps_np = np.array(reps, dtype=np.int64)
+        inds = tor.cat((inds[:reps_np[-1]],
+                       uni.sample((samples_shape[-1]-reps_np[-1],)).type_as(inds)), dim=-1)
+        inds, reps = tor.unique(inds, return_inverse=True)
+        inds, _ = tor.sort(inds, dim=-1)
         inds = pad_up_to(inds, samples_shape, -1)
-        inds.set_shape(samples_shape)
-        return inds, reps
 
-    fin_inds, fin_reps = tf.while_loop(cond, update_inds, (start_inds, start_reps),
-                                       shape_invariants=(start_inds.get_shape(), tf.TensorShape([None, ])))
-
-    return fin_inds
+    return inds

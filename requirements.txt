@@ -1,4 +1,2 @@
 numpy==1.16.1
-tensorflow
-keras
-tqdm
+torch==1.0.1

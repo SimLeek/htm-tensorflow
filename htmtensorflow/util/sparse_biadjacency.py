@@ -1,105 +1,83 @@
-"""
-Deals with sparse connections between two sets of vertices. Each set has no internal connections.
-+------+            +-----+
-|      |            |     |
-| +----------\      |     |
-|      |      ----------+ |
-|      |            |     |
-|  +--------\       |     |
-|      |     ----------+  |
-|   +----\          |     |
-|      |  --------\ |     |
-| +---------------------+ |
-+------+            +-----+
-"""
+import torch as tor
+import numpy as np
 import operator
 from functools import reduce
+from torch.distributions import uniform
 
-import tensorflow as tf
-
-from htmtensorflow.util.array_ops import array_to_nd_index
 from htmtensorflow.util.rand import unique_random_uniform
-import numpy as np
+from htmtensorflow.util.array_ops import array_to_nd_index
 
 if False:
     from typing import Union
 
-
-def init_random(input_shape,  # type: Union[tf.Tensor, np.ndarray]
-                output_shape,  # type: Union[tf.Tensor, np.ndarray]
-                connective_sparsity=0.02,
-                seed=None):
+def init_random(input_shape,  # type: Union[tor.Tensor, np.ndarray]
+                output_shape,  # type: Union[tor.Tensor, np.ndarray]
+                connective_sparsity=0.02):
     r"""
     Initializes a random sparse connectome.
 
+    >>> s = tor.manual_seed(1)
     >>> input_shape = np.asarray([640,480])
     >>> output_shape = np.asarray([50,50])
     >>> import time as t; t1=t.time()
-    >>> with tf.Session() as sess:
-    ...     perm = init_random(input_shape, output_shape, 0.0002, seed=1)
-    ...     init = tf.global_variables_initializer()
-    ...     sess.run(init)
-    ...     print(perm.eval())
-    SparseTensorValue(indices=array([[  0,   0,   8,  47],
-           [  0,   3,  11,  44],
-           [  0,   3,  22,  43],
-           ...,
-           [639, 472,  10,  32],
-           [639, 473,  24,  34],
-           [639, 476,  26,  24]]), values=array([0.2390374 , 0.92039955, 0.05051243, ..., 0.7923846 , 0.03713989,
-           0.6871357 ], dtype=float32), dense_shape=array([640, 480,  50,  50]))
+    >>> perm = init_random(input_shape, output_shape, 0.0002)
+    >>> print(perm)
+    tensor(indices=tensor([[  0,   0,   0,  ..., 639, 639, 639],
+                           [  0,   1,   3,  ..., 475, 477, 478],
+                           [ 39,  33,  42,  ...,  15,  34,  28],
+                           [ 18,  15,  13,  ...,  38,  40,  16]]),
+           values=tensor([0.2174, 0.7396, 0.3871,  ..., 0.5876, 0.1766, 0.3311]),
+           size=(640, 480, 50, 50), nnz=307200, layout=torch.sparse_coo)
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
-    two = tf.constant(2, dtype=tf.float32)
-    spars = tf.constant(connective_sparsity, dtype=tf.float32)
-    biadjancy_dimension = tf.cast(tf.concat([input_shape, output_shape], 0), tf.float32)
-    biadjancy_dimension_py = np.concatenate((input_shape, output_shape), axis=None).astype(np.float)
+    if not isinstance(input_shape, tor.Tensor):
+        input_shape = tor.Tensor(input_shape)
+    if not isinstance(output_shape, tor.Tensor):
+        output_shape = tor.Tensor(output_shape)
+    biadjancy_dimension = tor.cat((input_shape, output_shape), 0).type(tor.FloatTensor)
+    biadjancy_dimension_py = np.concatenate((input_shape, output_shape), axis=None).astype(np.int)
     max_connectome_py = reduce(operator.mul, biadjancy_dimension_py, 1)
     num_samples_py = int(max_connectome_py * connective_sparsity * 2.0)
-    rand_indices = unique_random_uniform((num_samples_py,), maxval=tf.cast(max_connectome_py, tf.int32), dtype=tf.int32,
-                                         seed=seed)
+    rand_indices = unique_random_uniform((num_samples_py,), maxval=max_connectome_py, dtype=tor.LongTensor)
     rand_indices = array_to_nd_index(rand_indices, biadjancy_dimension)
-    rand_uni_shape = tf.cast(max_connectome_py * spars * two, tf.int32)
-    rand_uni_shape = tf.expand_dims(rand_uni_shape, -1)
-    rand_values = tf.random.uniform(rand_uni_shape, seed=seed)
-
-    connectome = tf.SparseTensor(tf.cast(rand_indices, tf.int64),
-                                 rand_values,
-                                 tf.cast(biadjancy_dimension, tf.int64))
-
+    rand_uni_shape = tor.LongTensor([max_connectome_py*connective_sparsity*2])
+    rand_uni_shape = tor.unsqueeze(rand_uni_shape,-1)
+    uni = uniform.Uniform(0, 1)
+    rand_values = uni.sample(rand_uni_shape)
+    connectome = tor.sparse_coo_tensor(rand_indices.t(),
+                                       rand_values,
+                                       tuple(biadjancy_dimension_py))
     return connectome
 
-
-def init_zero(input_shape,  # type: Union[tf.Tensor, np.ndarray]
-              output_shape,  # type: Union[tf.Tensor, np.ndarray]
+def init_zero(input_shape,  # type: Union[tor.Tensor, np.ndarray]
+              output_shape,  # type: Union[tor.Tensor, np.ndarray]
               connective_sparsity=0.02,
               ):
     r"""Creates a modifiable sparse tensor for connections. Assumes it will keep about the same max sparsity
     >>> input_shape = np.asarray([100,100])
     >>> output_shape = np.asarray([50,50])
-    >>> with tf.Session() as sess:
-    ...     perm = init_zero(input_shape, output_shape)
-    ...     init = tf.global_variables_initializer()
-    ...     sess.run(init)
-    ...     print(perm.eval())
-    SparseTensorValue(indices=array([[-1, -1, -1, -1],
-           [-1, -1, -1, -1],
-           [-1, -1, -1, -1],
-           ...,
-           [-1, -1, -1, -1],
-           [-1, -1, -1, -1],
-           [-1, -1, -1, -1]]), values=array([0., 0., 0., ..., 0., 0., 0.], dtype=float32), dense_shape=array([100, 100,  50,  50]))
+    >>> perm = init_zero(input_shape, output_shape)
+    >>> print(perm)
+    tensor(indices=tensor([[1, 1, 1,  ..., 1, 1, 1],
+                           [1, 1, 1,  ..., 1, 1, 1],
+                           [1, 1, 1,  ..., 1, 1, 1],
+                           [1, 1, 1,  ..., 1, 1, 1]]),
+           values=tensor([0, 0, 0,  ..., 0, 0, 0]),
+           size=(100, 100, 50, 50), nnz=500000, layout=torch.sparse_coo)
     """
+    if not isinstance(input_shape, tor.Tensor):
+        input_shape = tor.Tensor(input_shape)
+    if not isinstance(output_shape, tor.Tensor):
+        output_shape = tor.Tensor(output_shape)
 
-    biadjancy_dimension = tf.concat([input_shape, output_shape], 0)
-    num_full_edges = tf.math.reduce_prod(biadjancy_dimension)
-    sparsity_constant = tf.constant(connective_sparsity)
-    num_sparse_edges = tf.cast(tf.cast(num_full_edges, tf.float32) * sparsity_constant, tf.int32)
-    biadjancy_indices = tf.Variable(tf.ones((num_sparse_edges, biadjancy_dimension.shape[0]), dtype=tf.int32) * -1)
-    biadjancy_values = tf.Variable(tf.zeros(num_sparse_edges, dtype=tf.float32))
+    biadjancy_dimension = tor.cat([input_shape, output_shape], 0)
+    num_full_edges = tor.prod(biadjancy_dimension)
+    num_sparse_edges = num_full_edges * connective_sparsity
+    biadjancy_indices = tor.ones((int(num_sparse_edges), biadjancy_dimension.shape[0]), dtype=tor.long)
+    biadjancy_values = tor.zeros(int(num_sparse_edges), dtype=tor.long)
 
-    connectome = tf.SparseTensor(tf.cast(biadjancy_indices, tf.int64),
+    connectome = tor.sparse_coo_tensor(biadjancy_indices.t(),
                                  biadjancy_values,
-                                 tf.cast(biadjancy_dimension, tf.int64))
+                                 tuple(np.array(biadjancy_dimension).astype(np.int)))
 
     return connectome
