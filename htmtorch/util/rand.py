@@ -14,7 +14,7 @@ def unique_random_uniform(samples_shape,
     >>> s = tor.manual_seed(1)
     >>> u = unique_random_uniform((5000,), maxval=25000000, dtype=tor.LongTensor)
     >>> print(u)
-    tensor([    2159,     3218,     5155,  ..., 24980546, 24990914, 24991864])
+    tensor([    5696,     7039,    24671,  ..., 24995458, 24996430, 24998348])
     >>> len(u)
     5000
     """
