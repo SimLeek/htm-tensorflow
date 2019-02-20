@@ -20,14 +20,14 @@ def init_random(input_shape,  # type: Union[tor.Tensor, np.ndarray]
     >>> input_shape = np.asarray([640,480])
     >>> output_shape = np.asarray([50,50])
     >>> import time as t; t1=t.time()
-    >>> perm = init_random(input_shape, output_shape, 0.0002)
+    >>> perm = init_random(input_shape, output_shape, 0.00002)
     >>> print(perm)
     tensor(indices=tensor([[  0,   0,   0,  ..., 639, 639, 639],
-                           [  0,   1,   3,  ..., 475, 477, 478],
-                           [ 39,  33,  42,  ...,  15,  34,  28],
-                           [ 18,  15,  13,  ...,  38,  40,  16]]),
-           values=tensor([0.2174, 0.7396, 0.3871,  ..., 0.5876, 0.1766, 0.3311]),
-           size=(640, 480, 50, 50), nnz=307200, layout=torch.sparse_coo)
+                           [  0,   3,   7,  ..., 408, 439, 472],
+                           [ 39,  42,  19,  ...,  24,  22,  36],
+                           [ 18,  13,  43,  ...,  48,  24,  24]]),
+           values=tensor([0.6639, 0.6602, 0.4093,  ..., 0.5752, 0.8249, 0.6980]),
+           size=(640, 480, 50, 50), nnz=30720, layout=torch.sparse_coo)
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
     if not isinstance(input_shape, tor.Tensor):
