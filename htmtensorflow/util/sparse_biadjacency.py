@@ -22,11 +22,11 @@ def init_random(input_shape,  # type: Union[tor.Tensor, np.ndarray]
     >>> import time as t; t1=t.time()
     >>> perm = init_random(input_shape, output_shape, 0.00002)
     >>> print(perm)
-    tensor(indices=tensor([[  0,   0,   0,  ..., 639, 639, 639],
-                           [  0,   3,   7,  ..., 408, 439, 472],
-                           [ 39,  42,  19,  ...,  24,  22,  36],
-                           [ 18,  13,  43,  ...,  48,  24,  24]]),
-           values=tensor([0.6639, 0.6602, 0.4093,  ..., 0.5752, 0.8249, 0.6980]),
+    tensor(indices=tensor([[  0,   0,   0,  ..., 637, 638, 639],
+                           [  1,   2,   6,  ..., 223, 359, 247],
+                           [ 16,  33,   3,  ...,   0,  32,  41],
+                           [ 41,  33,  47,  ...,   4,  36,  34]]),
+           values=tensor([0.2006, 0.3327, 0.2440,  ..., 0.3334, 0.8322, 0.9055]),
            size=(640, 480, 50, 50), nnz=30720, layout=torch.sparse_coo)
     >>> t2 = t.time(); assert t2-t1<10, "Random sparse biadjacency tensor took {} seconds to init.".format(t2-t1)
     """
