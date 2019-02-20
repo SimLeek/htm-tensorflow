@@ -12,11 +12,11 @@ def unique_random_uniform(samples_shape,
     Generates only unique random variables. May be smaller than num_samples
 
     >>> s = tor.manual_seed(1)
-    >>> u = unique_random_uniform((500000,), maxval=25000000, dtype=tor.LongTensor)
+    >>> u = unique_random_uniform((5000,), maxval=25000000, dtype=tor.LongTensor)
     >>> print(u)
-    tensor([       5,       25,       32,  ..., 24999652, 24999784, 24999804])
+    tensor([    2159,     3218,     5155,  ..., 24980546, 24990914, 24991864])
     >>> len(u)
-    500000
+    5000
     """
     inds = Variable(tor.ones(samples_shape).type(dtype) * -1)
     reps = Variable(tor.LongTensor((0,)))
