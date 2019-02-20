@@ -1,5 +1,5 @@
-from htmtensorflow.testing.torchtest import TorchTestCase
-from htmtensorflow.util.array_ops import array_to_nd_index
+from htmtorch.testing.torchtest import TorchTestCase
+from htmtorch.util.array_ops import array_to_nd_index
 import torch as tor
 
 class TestArrayOps(TorchTestCase):

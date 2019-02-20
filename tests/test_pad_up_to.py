@@ -1,5 +1,5 @@
-from htmtensorflow.testing.torchtest import TorchTestCase
-from htmtensorflow.util.pad_up_to import pad_up_to
+from htmtorch.testing.torchtest import TorchTestCase
+from htmtorch.util.pad_up_to import pad_up_to
 import torch as tor
 
 

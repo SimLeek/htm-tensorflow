@@ -1,8 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
-from htmtensorflow.util.sparse_biadjacency import init_random
-from htmtensorflow.util.get_connected_synapses import get_connected_synapses
+from htmtorch.util.sparse_biadjacency import init_random
+from htmtorch.util.get_connected_synapses import get_connected_synapses
 
 if False:
     from typing import Union, List, Tuple

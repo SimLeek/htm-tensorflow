@@ -4,8 +4,8 @@ import operator
 from functools import reduce
 from torch.distributions import uniform
 
-from htmtensorflow.util.rand import unique_random_uniform
-from htmtensorflow.util.array_ops import array_to_nd_index
+from htmtorch.util.rand import unique_random_uniform
+from htmtorch.util.array_ops import array_to_nd_index
 
 if False:
     from typing import Union

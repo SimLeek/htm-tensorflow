@@ -14,7 +14,7 @@ install:
   - pip install codecov -q
 
 script:
-  - find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE
+  - find ./htmtorch/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE -v
 # uncomment for cuda tests:
 #  - python -m coverage run -a -m unittest discover tests
   - python -m coverage report
