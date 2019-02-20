@@ -6,7 +6,7 @@ def get_connected_synapses(sparse_tensor,  # type: tor.sparse.Tensor
                            ):
     r"""
     Initializes a random sparse connectome.
-    >>> from htmtorch.util.sparse_biadjacency import init_random
+    >>> from htmtorch.functional.sparse_biadjacency import init_random
     >>> s = tor.manual_seed(1)
     >>> input_shape = np.asarray([100,100])
     >>> output_shape = np.asarray([50,50])

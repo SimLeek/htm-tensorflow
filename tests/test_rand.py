@@ -1,5 +1,5 @@
 from htmtorch.testing.torchtest import TorchTestCase
-from htmtorch.util.rand import unique_random_uniform
+from htmtorch.functional.rand import unique_random_uniform
 import torch as tor
 
 

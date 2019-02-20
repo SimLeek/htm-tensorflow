@@ -1,5 +1,5 @@
 import torch as tor
-from htmtorch.util.pad_up_to import pad_up_to
+from htmtorch.functional.pad_up_to import pad_up_to
 from torch.autograd import Variable
 from torch.distributions import uniform
 import numpy as np
