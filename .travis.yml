@@ -5,7 +5,7 @@ env:
   - CODECOV_TOKEN="2cfcf295-ea5e-4f86-a596-fea8a850f11f"
 
 python:
-  - '2.7'
+#  - '2.7'
   - "3.5"
   - "3.6"
 
