@@ -1,20 +1,38 @@
 language: python
+cache: pip
 
 env:
   - CODECOV_TOKEN="2cfcf295-ea5e-4f86-a596-fea8a850f11f"
 
 python:
+#  - '2.7'
   - "3.5"
   - "3.6"
 
 install:
-  - pip install -r requirements.txt
-  - pip install coverage
-  - pip install codecov
+
+  - pip install -r requirements.txt -q
+  - pip install coverage -q
+  - pip install codecov -q
 
 script:
-  - find ./htmtensorflow/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE -v
+
+  - find ./htmtorch/ -name '*.py' -print0 | xargs -0 python -m coverage run -a -m doctest -o NORMALIZE_WHITESPACE -v
+# uncomment for cuda tests:
+#  - python -m coverage run -a -m unittest discover tests
   - python -m coverage report
+
+# uncomment for initial deployment:
+#  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then export CIBW_BUILD='cp27*'; fi
+#  - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then export CIBW_BUILD='cp35*'; fi
+#  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then export CIBW_BUILD='cp36*'; fi
+#  - pip install cibuildwheel==0.10.1
+#  - cibuildwheel --output-dir wheelhouse
 
 after_success:
   - codecov
+
+#deploy:
+#  provider: pypi
+#  user: SimLeek
+#  skip_existing: true
